@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react"
-import { auth, storage } from "../firebase/config"
+import { auth, storage, db } from "../firebase/config"
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth"
-import { ref, getDownloadURL, uploadBytesResumable } from "firebase/storage"
+import { ref, getDownloadURL, uploadBytes } from "firebase/storage"
+import { collection, doc, setDoc } from "firebase/firestore"
 import { useAuthContext } from "./useAuthContext"
 
 export const useSignup = () => {
   const [isCancelled, setIsCancelled] = useState(false)
   const [error, setError] = useState(null)
   const [isPending, setIsPending] = useState(false)
-  const [imageUrl, setImageUrl] = useState("")
   const { dispatch } = useAuthContext()
 
   const signup = async (email, password, displayName, thumbnail) => {
@@ -25,53 +25,25 @@ export const useSignup = () => {
 
       // upload user thumbnail
       const uploadPath = `thumbnails/${res.user.uid}/${thumbnail.name}`
-      const img = ref(storage, uploadPath)
-
-      const uploadTask = uploadBytesResumable(img, thumbnail)
-      uploadTask.on(
-        "state_changed",
-        (snapshot) => {
-          const progress =
-            (snapshot.bytesTransferred / snapshot.totalBytes) * 100
-          console.log("Upload is " + progress + "% done")
-          switch (snapshot.state) {
-            case "paused":
-              console.log("Upload is paused")
-              break
-            case "running":
-              console.log("Upload is running")
-              break
-            default:
-              break
-          }
-        },
-        (error) => {
-          switch (error.code) {
-            case "storage/unauthorized":
-              console.log("storage/unauthorized")
-              break
-            case "storage/canceled":
-              console.log("storage/canceled")
-              break
-            case "storage/unknown":
-              console.log("storage/unknown")
-              break
-            default:
-              break
-          }
-        },
-        () => {
-          getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-            setImageUrl(downloadURL)
-          })
-        }
-      )
+      const imgRef = ref(storage, uploadPath)
+      const img = await uploadBytes(imgRef, thumbnail)
+      const imgUrl = await getDownloadURL(img.ref)
 
       // add display name to user
-      await updateProfile(auth.currentUser, { displayName, photoURL: imageUrl })
+      await updateProfile(res.user, { displayName, photoURL: imgUrl })
+
+      // create a user document
+      const collRef = collection(db, "users")
+      const DocRef = doc(collRef, res.user.uid)
+      await setDoc(DocRef, {
+        online: true,
+        displayName,
+        photoURL: imgUrl,
+      })
 
       // dispatch login action
       dispatch({ type: "LOGIN", payload: res.user })
+      setIsPending(false)
 
       if (!isCancelled) {
         setIsPending(false)
