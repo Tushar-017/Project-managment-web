@@ -15,7 +15,7 @@ function Navbar() {
       <ul>
         <li className="logo">
           <img src={Logo} alt="scrum logo" />
-          <span>The Scrum</span>
+          <span>WOKE</span>
         </li>
 
         {!user && (

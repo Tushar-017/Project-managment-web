@@ -75,7 +75,7 @@ function Create() {
       details,
       category: category.value,
       // dueDate: end.diff(now, "hours"),
-      dueDate: moment(new Date(dueDate)).format("MMMM Do YYYY, h:mm:ss a"),
+      dueDate: moment(new Date(dueDate)).format("MMMM Do YYYY"),
       comments: [],
       createdBy,
       assignedUsersList,

@@ -6,6 +6,7 @@ import {
   serverTimestamp,
   doc,
   deleteDoc,
+  updateDoc,
 } from "firebase/firestore"
 
 let initialState = {
@@ -28,6 +29,13 @@ const firestoreReducer = (state, action) => {
       }
     case "DELETED_DOCUMENT":
       return { isPending: false, document: null, success: true, error: null }
+    case "UPDATED_DOCUMENT":
+      return {
+        isPending: false,
+        document: action.payload,
+        success: true,
+        error: null,
+      }
     case "ERROR":
       return {
         isPending: false,
@@ -80,9 +88,28 @@ export const useFirestore = (coll) => {
     }
   }
 
+  // update a document
+  const updateDocument = async (id, updates) => {
+    dispatch({ type: "IS_PENDING" })
+
+    try {
+      const docRef = doc(ref, id)
+      const updatingDocument = updateDoc(docRef, updates)
+      // const updatingDocument = ref.doc(id).update
+      dispatchIfNotCancelled({
+        type: "UPDATED_DOCUMENT",
+        payload: updatingDocument,
+      })
+      return updatingDocument
+    } catch (err) {
+      dispatchIfNotCancelled({ type: "ERROR", payload: err.message })
+      return null
+    }
+  }
+
   useEffect(() => {
     return () => setIsCancelled(true)
   }, [])
 
-  return { addDocument, deleteDocument, response }
+  return { addDocument, deleteDocument, updateDocument, response }
 }
