@@ -12,6 +12,16 @@ Woke a Project Management Website website build using React and Firebase.
 - Firebase as serverless DB
 - React Router for Routing
 - CSS for styling
+- MomentJs
+
+## Features
+
+- login/SignUp
+- create Project
+- asign project
+- comment
+- delete post
+- dashboard with filters
 
 ## Getting Started
 
@@ -41,8 +51,7 @@ npm run build
 - Custom Hooks
 - React context
 - Firebase
-- Leaflet
-- Toastify
+
 
 ## Contributing
 
